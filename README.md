@@ -9,7 +9,8 @@ your software to a staging or production environment while also running your
 end-to-end and unit tests in advance, deploying only those deliverables to your
 environments that don't have failing tests.
 
-SimpleCD currently utilizes Karma for end-to-end browser testsi, and PHPUnit.
+SimpleCD currently utilizes Karma for end-to-end browser tests, and PHPUnit for
+unit tests.
 
 
 ## Installation
