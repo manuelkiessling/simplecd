@@ -11,7 +11,7 @@
 # 3. Pull the newest code from the remote repository
 # 4. Run the script that deploys the code to staging (repo/_simplecd/deploy-staging.sh)
 # 5. Does a Karma e2e config file exists? If yes, run the Karma end-to-end tests
-# 6. Does a PHPUnit test suite exist? If yes, run it
+# 6. Does a PHPUnit test suite exist? If yes, run the PHP unit tests
 # 7. If all tests are green, run the script that deploys the code to production (repo/_simplecd/deploy-production.sh)
 
 
