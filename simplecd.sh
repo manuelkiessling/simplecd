@@ -44,14 +44,22 @@ WORKINGDIR=/var/tmp/simplecd
 PROJECTSDIR=$WORKINGDIR/projects
 REPODIR=/var/tmp/simplecd/projects/$HASH
 
+
+# Is another process for this repo and branch running?
+
 CONTROLFILE=/var/tmp/simplecd/controlfile.$HASH
 if [ -f $CONTROLFILE ]; then
   echo "Because the control file $CONTROLFILE exists, I assume that another instance is still running. Exiting..."
   exit 1
 fi
 
+
 # Create control file so no other runs are started in parallel
+
 touch $CONTROLFILE
+
+
+# Let's go
 
 echo ""
 echo "Starting delivery of branch $BRANCH from repo $REPO, hash of this run is $HASH"
@@ -71,7 +79,7 @@ if [ ! -w $PROJECTSDIR ]; then
 fi
 
 
-# Check if a newer commit id is in the remote repo
+# Check if a new commit id is in the remote repo
 
 LASTCOMMITID=`cat $WORKINGDIR/last_commit_id.$HASH 2> /dev/null`
 REMOTECOMMITID=`git ls-remote $REPO refs/heads/$BRANCH | cut -f1`
