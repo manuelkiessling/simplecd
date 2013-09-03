@@ -68,10 +68,6 @@ echo ""
 
 # Prepare and check the environment
 
-if [ ! -w $WORKINGDIR ]; then
-  abort "Cannot write to directory $WORKINGDIR. Exiting..."
-fi
-
 mkdir -p $PROJECTSDIR
 
 if [ ! -w $PROJECTSDIR ]; then
