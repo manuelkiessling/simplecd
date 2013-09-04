@@ -2,25 +2,48 @@
 
 # Main script for Simple Continuous Delivery
 
-# Usage: simplecd.sh <repo-url> <branch>
+# Usage: simplecd.sh <repo-url> <branch> [reset]
 
 # The following steps are executed:
 #
 # 1. Check if an instance of the given plan is already running, exit if yes
 # 2. Check if the remote repo is newer than what was last delivered
 # 3. Pull the newest code from the remote repository
-# 4. Run the script that deploys the code to staging (repo/_simplecd/deploy-staging.sh)
-# 5. Does a Karma e2e config file exists? If yes, run the Karma end-to-end tests
-# 6. Does a PHPUnit test suite exist? If yes, run the PHP unit tests
-# 7. If all tests are green, run the script that deploys the code to production (repo/_simplecd/deploy-production.sh)
+# 4. Run the scripts that are provided by the repository in subfolder _simplecd:
+#    a. run-unit-tests
+#    b. deploy-to-staging
+#    c. run-e2e-tests-for-staging
+#    d. deploy-to-production
+#    e. run-e2e-tests-for-production
+# 5. Mail results to the receivers listed in _simplecd/mailreceivers
+#
+# For steps a to e, the rule is that they must return exit code 0 on success
+# and exit code > 0 on failure. If any of these steps fail, the delivery is
+# aborted.
+#
+# SimpleCD will call every script with the path to the local repository clone,
+# e.g.
+#
+#     ./_simplecd/run-unit-tests /var/tmp/simplecd/projects/e70081c0e267ac64454c27f5e600d214
+#
+# If the script file for a given step a to e is not found, SimpleCD simply
+# skips this step and continues with the next step.
+#
+# In any case, SimpleCD sends a mail to ever mail receiver, reporting either
+# success or a detailed error report upon failure.
+#
+# If the keyword "reset" is provided as the third parameter, SimpleCD does not
+# start a delivery, but instead removes all working data related to the given
+# repo/branch combination, that is, SimpleCD resets its environment to a state
+# as if no previous runs for this repo/branch had occured.
 
 
-# Functions ###################################################################
+# Functions ####################################################################
 
 shutdown () {
   echo $1
   echo ""
-  rm $CONTROLFILE
+  rm -f $CONTROLFILE
   exit 0
 }
 
@@ -31,8 +54,20 @@ abort () {
   exit 1
 } 
 
+run_project_script () {
+ if [ ! -f $REPODIR/_simplecd/$1 ]; then
+   echo "Cannot find script _simplecd/$1, skipping."
+ else
+  echo "Starting project's $1 script..."
+  echo ""
+  $REPODIR/_simplecd/$1 $REPODIR
+  echo ""
+  echo "Finished executing project's $1 script."
+ fi
+}
 
-# Main routine ################################################################
+
+# Main routine #################################################################
 
 PATH=$PATH:/bin:/usr/bin:/usr/sbin:/usr/local/bin
 
@@ -43,6 +78,17 @@ HASH=`echo "$0 $REPO $BRANCH" | md5sum | cut -d" " -f1`
 WORKINGDIR=/var/tmp/simplecd
 PROJECTSDIR=$WORKINGDIR/projects
 REPODIR=/var/tmp/simplecd/projects/$HASH
+
+
+# Did the user provide the parameter "reset"? In this case
+# we remove the control file and last commit id
+
+if [ "$3" = "reset" ]; then
+  echo "Resetting SimpleCD environment for repo $REPO, branch $BRANCH"
+  rm -f $WORKINGDIR/last_commit_id.$HASH
+  rm -rf $REPODIR
+  shutdown "done."
+fi
 
 
 # Is another process for this repo and branch running?
@@ -108,6 +154,20 @@ echo "     by: `git log -n 1 refs/heads/$BRANCH --pretty=format:'%an'`"
 echo "     at: `git log -n 1 refs/heads/$BRANCH --pretty=format:'%aD'`"
 echo "    msg: `git log -n 1 refs/heads/$BRANCH --pretty=format:'%s'`"
 echo ""
+
+
+## Run delivery steps from repository ##########################################
+
+# Step a: Run local unit tests
+
+run_project_script run-unit-tests
+
+# Step b: Deploy code to staging environment
+
+run_project_script deploy-to-staging
+
+
+
 
 
 # Deploy code to staging environment
