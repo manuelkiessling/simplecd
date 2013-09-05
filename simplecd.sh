@@ -29,13 +29,13 @@
 # If the script file for a given step a to e is not found, SimpleCD simply
 # skips this step and continues with the next step.
 #
-# In any case, SimpleCD sends a mail to ever mail receiver, reporting either
-# success or a detailed error report upon failure.
-#
 # If the keyword "reset" is provided as the third parameter, SimpleCD does not
 # start a delivery, but instead removes all working data related to the given
 # repo/branch combination, that is, SimpleCD resets its environment to a state
 # as if no previous runs for this repo/branch had occured.
+
+
+PATH=$PATH:/bin:/usr/bin:/usr/sbin:/usr/local/bin
 
 
 # Functions ####################################################################
@@ -55,21 +55,28 @@ abort () {
 } 
 
 run_project_script () {
- if [ ! -f $REPODIR/_simplecd/$1 ]; then
-   echo "Cannot find script _simplecd/$1, skipping."
- else
-  echo "Starting project's $1 script..."
+  STATUS=0
+  if [ ! -f $REPODIR/_simplecd/$1 ]; then
+    echo "Cannot find script _simplecd/$1, skipping."
+  else
+   echo "Starting project's $1 script..."
+   echo ""
+   $REPODIR/_simplecd/$1 $REPODIR
+   STATUS=$?
+   echo ""
+   echo "Finished executing project's $1 script."
+  fi
+
+  if [ ! $STATUS -eq 0 ]; then
+    abort "Error while executing project's $1 script. Aborting..."
+  fi
+
   echo ""
-  $REPODIR/_simplecd/$1 $REPODIR
-  echo ""
-  echo "Finished executing project's $1 script."
- fi
 }
 
 
 # Main routine #################################################################
 
-PATH=$PATH:/bin:/usr/bin:/usr/sbin:/usr/local/bin
 
 REPO=$1
 BRANCH=$2
@@ -95,7 +102,7 @@ fi
 
 CONTROLFILE=/var/tmp/simplecd/controlfile.$HASH
 if [ -f $CONTROLFILE ]; then
-  echo "Because the control file $CONTROLFILE exists, I assume that another instance is still running. Exiting..."
+  echo "Because the control file $CONTROLFILE exists, I assume that another instance is still running. Aborting..."
   exit 1
 fi
 
@@ -117,7 +124,7 @@ echo ""
 mkdir -p $PROJECTSDIR
 
 if [ ! -w $PROJECTSDIR ]; then
-  abort "Cannot write to directory $PROJECTSDIR. Exiting..."
+  abort "Cannot write to directory $PROJECTSDIR. Aborting..."
 fi
 
 
@@ -127,7 +134,7 @@ LASTCOMMITID=`cat $WORKINGDIR/last_commit_id.$HASH 2> /dev/null`
 REMOTECOMMITID=`git ls-remote $REPO refs/heads/$BRANCH | cut -f1`
 
 if [ "$LASTCOMMITID" = "$REMOTECOMMITID" ]; then
-  shutdown "Remote commit id ($REMOTECOMMITID) has not changed since last run, won't deliver. Exiting..."
+  shutdown "Remote commit id ($REMOTECOMMITID) has not changed since last run, won't deliver. Aborting..."
 fi
 
 
@@ -158,60 +165,15 @@ echo ""
 
 ## Run delivery steps from repository ##########################################
 
-# Step a: Run local unit tests
-
 run_project_script run-unit-tests
-
-# Step b: Deploy code to staging environment
-
 run_project_script deploy-to-staging
+run_project_script run-e2e-tests-for-staging
+run_project_script deploy-to-production
+run_project_script run-e2e-tests-for-production
 
-
-
-
-
-# Deploy code to staging environment
-
-if [ ! -f $REPODIR/_simplecd/deploy-staging.sh ]; then
-  abort "Cannot find staging deploy script _simplecd/deploy-staging.sh in project repo. Exiting..."
-fi
-
-echo "Starting project's staging deployment script..."
-echo ""
-bash $REPODIR/_simplecd/deploy-staging.sh $REPODIR 2>&1 | while IFS= read -r line;do echo " [STAGING DEPLOY] $line";done
-echo ""
-echo "Finished executing project's staging deployment script."
-
-
-# Prepare and run end-to-end tests
-
-if [ ! -f $REPODIR/_simplecd/karma.e2e.conf.js ]; then
-  echo "Cannot find Karma configuration file, not running e2e tests."
-else
-  echo "Preparing end-to-end test run with Karma."
-
-  echo "Installing Node.js modules via NPM..."
-  echo ""
-  npm install 2>&1 | while IFS= read -r line;do echo " [NPM INSTALL] $line";done
-  echo ""
-  echo "done."
-
-  echo "Starting Karma end-to-end test run..."
-  echo ""
-  karma start _simplecd/karma.e2e.conf.js
-  KARMARUNSUCCESSFUL=$?
-  echo ""
-  echo "done."
-fi
-
-if [ ! $KARMARUNSUCCESSFUL -eq 0 ]; then
-  abort "Karma end-to-end test run was not successful. Exiting..."
-else
-  echo "Karma end-to-end test run was successful."
-fi
 
 # Clean up the control file and finish
 
 echo ""
-shutdown "Delivery finished."
+shutdown "Delivery finished. Exiting..."
 rm -f $CONTROLFILE

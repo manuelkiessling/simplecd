@@ -5,23 +5,17 @@
 SimpleCD is a Continuous Delivery system written for the Bash shell.
 
 It provides a very simple environment which allows you to continuously deliver
-your software to a staging or production environment while also running your
-end-to-end and unit tests in advance, deploying only those deliverables to your
-environments that don't have failing tests.
+your software to a staging and/or production environment while also running
+your end-to-end and/or unit tests in advance, deploying only those deliverables
+to your environments that don't have failing tests.
 
-SimpleCD currently utilizes Karma for end-to-end browser tests, and PHPUnit for
-unit tests.
+SimpleCD is completely agnostic in regards to unit- and e2e-test frameworks and
+doesn't know itself how to deploy deliverables. These steps are defined and
+implemented within the projects that are to be delivered, and SimpleCD merely
+executes these steps.
 
 
 ## Installation
-
-SimpleCD depends on Karma, and therefore needs Node.js and a setup
-where Karma can start one of its supported browsers
-(see http://karma-runner.github.io/0.10/config/browsers.html).
-
-Install the latest version of Node.js from http://nodejs.org/download/
-
-Install Karma: `sudo npm install -g karma`
 
 Clone this repository. You will only need the file `simplecd.sh` in order
 to start deliveries.
@@ -30,16 +24,24 @@ to start deliveries.
 ## Preparing your application
 
 SimpleCD depends on some special files being present in your application's
-Git repository. These are:
+Git repository, the so-called SimpleCD run scripts - one for earch step of a
+continuous delivery run.
 
-* `_simplecd/deploy-staging.sh` - a bash-executable script that copies the
-  delivery to your staging system
-* `_simplecd/karma.e2e.conf.js` - a Karma configuration file which allows
-  SimpleCD to run your end-to-end tests
-* `package.json` - a NPM package file which describes the Karma dependencies
-  for your end-to-end tests. SimpleCD will install them before running Karma
+These are:
 
-See `example-configs` in this repository for some example files.
+ * `run-unit-tests`
+ * `deploy-to-staging`
+ * `run-e2e-tests-for-staging`
+ * `deploy-to-production`
+ * `run-e2e-tests-for-production`
+
+The names probably speak for themselves. These files must be placed in a
+subfolder of you project's repository named `_simplecd`, and must be set to
+executable.
+
+SimpleCD will try to execute each step by executing these scripts in the order
+shown above. If a script is missing, this step is simply skipped. If executing
+a script results in a status code > 0, the delivery is aborted.
 
 
 ## Usage
