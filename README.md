@@ -36,7 +36,7 @@ These are:
  * `run-e2e-tests-for-production`
 
 The names probably speak for themselves. These files must be placed in a
-subfolder of you project's repository named `_simplecd`, and must be set to
+subfolder of your project's repository named `_simplecd`, and must be set to
 executable.
 
 SimpleCD will try to execute each step by executing these scripts in the order
