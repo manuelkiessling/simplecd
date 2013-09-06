@@ -59,12 +59,12 @@ run_project_script () {
   if [ ! -f $REPODIR/_simplecd/$1 ]; then
     echo "Cannot find script _simplecd/$1, skipping."
   else
-   echo "Starting project's $1 script..."
-   echo ""
-   $REPODIR/_simplecd/$1 $REPODIR
-   STATUS=$?
-   echo ""
-   echo "Finished executing project's $1 script."
+    echo "Starting project's $1 script..."
+    echo ""
+    $REPODIR/_simplecd/$1 $REPODIR
+    STATUS=$?
+    echo ""
+    echo "Finished executing project's $1 script."
   fi
 
   if [ ! $STATUS -eq 0 ]; then
