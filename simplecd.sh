@@ -43,6 +43,7 @@ PATH=$PATH:/bin:/usr/bin:/usr/sbin:/usr/local/bin
 shutdown () {
   echo $1
   echo ""
+  mail_log
   rm -f $CONTROLFILE
   exit 0
 }
@@ -50,19 +51,40 @@ shutdown () {
 abort () { 
   echo $1
   echo ""
+  mail_log
   rm $CONTROLFILE
   exit 1
-} 
+}
+
+log () {
+  LOG="$LOG
+
+  $1"
+}
+
+mail_log () {
+  if [ -f $REPODIR/_simplecd/logreceivers.txt ]; then
+    echo "$LOG" > $WORKINGDIR/log.$HASH
+    while read MR; do
+      mail -aFrom:simplecd@example.com -s "SimpleCD run log" $MR < $WORKINGDIR/log.$HASH
+   done < $REPODIR/_simplecd/logreceivers.txt
+   #rm $WORKINGDIR/log.$HASH
+  fi
+}
 
 run_project_script () {
   STATUS=0
   if [ ! -f $REPODIR/_simplecd/$1 ]; then
     echo "Cannot find script _simplecd/$1, skipping."
+    log "Skipped step $1"
   else
     echo "Starting project's $1 script..."
+    log "Output of project's $1 script:"
     echo ""
-    $REPODIR/_simplecd/$1 $REPODIR
+    OUTPUT=`$REPODIR/_simplecd/$1 $REPODIR`
     STATUS=$?
+    echo $OUTPUT
+    log "$OUTPUT"
     echo ""
     echo "Finished executing project's $1 script."
   fi
@@ -116,7 +138,7 @@ touch $CONTROLFILE
 echo ""
 echo "Starting delivery of branch $BRANCH from repo $REPO, hash of this run is $HASH"
 echo ""
-
+log "Log for delivery of branch $BRANCH from repo $REPO, hash if this run was $HASH"
 
 # Prepare and check the environment
 
@@ -174,5 +196,5 @@ run_project_script run-e2e-tests-for-production
 # Clean up the control file and finish
 
 echo ""
+
 shutdown "Delivery finished. Exiting..."
-rm -f $CONTROLFILE
