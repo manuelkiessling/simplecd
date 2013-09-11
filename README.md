@@ -50,6 +50,41 @@ the listed mail addresses.
 
 ## Usage
 
+`simplecd.sh <repo-url> <branch> [reset|<url>]`
+
+The following steps are executed:
+
+1. Check if an instance of the given plan is already running, exit if yes
+2. Check if the remote repo is newer than what was last delivered
+3. Pull the newest code from the remote repository
+4. Run the scripts that are provided by the repository in subfolder `_simplecd`:
+  a. `run-unit-tests`
+  b. `deploy-to-staging`
+  c. `run-e2e-tests-for-staging`
+  d. `deploy-to-production`
+  e. `run-e2e-tests-for-production`
+5. Mail results to the receivers listed in `_simplecd/logreceivers.txt`
+
+For steps a to e, the rule is that they must return exit code 0 on success
+and exit code > 0 on failure. If any of these steps fail, the delivery is
+aborted.
+
+SimpleCD will call every script with the path to the local repository clone,
+e.g.
+
+`./_simplecd/run-unit-tests /var/tmp/simplecd/projects/e70081c0e267ac64454c27f5e600d214`
+
+If the script file for a given step a to e is not found, SimpleCD simply
+skips this step and continues with the next step.
+
+If the keyword *reset* is provided as the third parameter, SimpleCD does not
+start a delivery, but instead removes all working data related to the given
+repo/branch combination, that is, SimpleCD resets its environment to a state
+as if no previous runs for this repo/branch had occured.
+
+If instead an HTTP URL is provided as the third parameter, SimpleCD will
+prefix any commit id it outputs with this URL.
+
 Start a delivery by running SimpleCD with a git repository URL as the first,
 and a branch name as the second parameter:
 
