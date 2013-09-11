@@ -10,7 +10,7 @@ your end-to-end and/or unit tests in advance, deploying only those deliverables
 to your environments that don't have failing tests.
 
 SimpleCD is completely agnostic in regards to unit- and e2e-test frameworks and
-doesn't know itself how to deploy deliverables. These steps are defined and
+doesn't know how to deploy deliverables itself. These steps are defined and
 implemented within the projects that are to be delivered, and SimpleCD merely
 executes these steps.
 
@@ -43,7 +43,7 @@ SimpleCD will try to execute each step by executing these scripts in the order
 shown above. If a script is missing, this step is simply skipped. If executing
 a script results in a status code > 0, the delivery is aborted.
 
-You can additionally add a file `_simplecd/logreceivers.txt` with one mail
+Additionally, you can add a file `_simplecd/logreceivers.txt` with one mail
 address per line. If the file is present, a report of the run will be sent to
 the listed mail addresses.
 
