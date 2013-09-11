@@ -67,8 +67,7 @@ mail_log () {
     echo "$LOG" > $WORKINGDIR/log.$HASH
     while read MR; do
       mail -aFrom:simplecd@example.com -s "SimpleCD run log" $MR < $WORKINGDIR/log.$HASH
-   done < $REPODIR/_simplecd/logreceivers.txt
-   #rm $WORKINGDIR/log.$HASH
+    done < $REPODIR/_simplecd/logreceivers.txt
   fi
 }
 
@@ -83,7 +82,7 @@ run_project_script () {
     echo ""
     OUTPUT=`$REPODIR/_simplecd/$1 $REPODIR`
     STATUS=$?
-    echo $OUTPUT
+    echo "$OUTPUT"
     log "$OUTPUT"
     echo ""
     echo "Finished executing project's $1 script."
@@ -114,6 +113,7 @@ REPODIR=/var/tmp/simplecd/projects/$HASH
 if [ "$3" = "reset" ]; then
   echo "Resetting SimpleCD environment for repo $REPO, branch $BRANCH"
   rm -f $WORKINGDIR/last_commit_id.$HASH
+  rm -f $WORKINGDIR/log.$HASH
   rm -rf $REPODIR
   shutdown "done."
 fi
