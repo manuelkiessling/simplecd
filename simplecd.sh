@@ -43,7 +43,7 @@ PATH=$PATH:/bin:/usr/bin:/usr/sbin:/usr/local/bin
 shutdown () {
   echo $1
   echo ""
-  mail_log
+  mail_log "success"
   rm -f $CONTROLFILE
   exit 0
 }
@@ -51,7 +51,7 @@ shutdown () {
 abort () { 
   echo $1
   echo ""
-  mail_log
+  mail_log "failure"
   rm $CONTROLFILE
   exit 1
 }
@@ -67,7 +67,7 @@ mail_log () {
     echo "$LOG" > $WORKINGDIR/log.$HASH
     while read MR; do
       echo "Mailing log of this run to $MR..."
-      mail -aFrom:simplecd@example.com -s "SimpleCD run log" $MR < $WORKINGDIR/log.$HASH
+      mail -aFrom:simplecd@example.com -s "[simplecd][$1] $REPO - $BRANCH" $MR < $WORKINGDIR/log.$HASH
     done < $REPODIR/_simplecd/logreceivers.txt
   fi
 }
@@ -79,7 +79,9 @@ run_project_script () {
     log "Skipped step $1"
   else
     echo "Starting project's $1 script..."
-    log "Output of project's $1 script:"
+    log ""
+    log "Output of project's $1 script:
+#######################################"
     echo ""
     OUTPUT=`$REPODIR/_simplecd/$1 $REPODIR`
     STATUS=$?
@@ -106,23 +108,25 @@ HASH=`echo "$0 $REPO $BRANCH" | md5sum | cut -d" " -f1`
 WORKINGDIR=/var/tmp/simplecd
 PROJECTSDIR=$WORKINGDIR/projects
 REPODIR=/var/tmp/simplecd/projects/$HASH
+CONTROLFILE=/var/tmp/simplecd/controlfile.$HASH
 
 
 # Did the user provide the parameter "reset"? In this case
-# we remove the control file and last commit id
+# we remove everything we know about the given repo/branch combination
 
 if [ "$3" = "reset" ]; then
   echo "Resetting SimpleCD environment for repo $REPO, branch $BRANCH"
   rm -f $WORKINGDIR/last_commit_id.$HASH
   rm -f $WORKINGDIR/log.$HASH
   rm -rf $REPODIR
-  shutdown "done."
+  rm -f $CONTROLFILE
+  echo "done."
+  exit 0
 fi
 
 
 # Is another process for this repo and branch running?
 
-CONTROLFILE=/var/tmp/simplecd/controlfile.$HASH
 if [ -f $CONTROLFILE ]; then
   echo "Because the control file $CONTROLFILE exists, I assume that another instance is still running. Aborting..."
   exit 1
@@ -156,7 +160,8 @@ LASTCOMMITID=`cat $WORKINGDIR/last_commit_id.$HASH 2> /dev/null`
 REMOTECOMMITID=`git ls-remote $REPO refs/heads/$BRANCH | cut -f1`
 
 if [ "$LASTCOMMITID" = "$REMOTECOMMITID" ]; then
-  shutdown "Remote commit id ($REMOTECOMMITID) has not changed since last run, won't deliver. Aborting..."
+  echo "Remote commit id ($REMOTECOMMITID) has not changed since last run, won't deliver. Aborting..."
+  exit 0
 fi
 
 
@@ -176,12 +181,15 @@ echo $CURRENTCOMMITID > $WORKINGDIR/last_commit_id.$HASH
 
 echo ""
 echo "This is what's going to be delivered:"
-echo " Repository: $REPO"
-echo " Branch: $BRANCH"
-echo " Commit: $CURRENTCOMMITID"
-echo "     by: `git log -n 1 refs/heads/$BRANCH --pretty=format:'%an'`"
-echo "     at: `git log -n 1 refs/heads/$BRANCH --pretty=format:'%aD'`"
-echo "    msg: `git log -n 1 refs/heads/$BRANCH --pretty=format:'%s'`"
+SUMMARY="
+ Repository: $REPO
+     Branch: $BRANCH
+     Commit: $CURRENTCOMMITID
+         by: `git log -n 1 refs/heads/$BRANCH --pretty=format:'%an'`
+         at: `git log -n 1 refs/heads/$BRANCH --pretty=format:'%aD'`
+        msg: `git log -n 1 refs/heads/$BRANCH --pretty=format:'%s'`"
+echo "$SUMMARY"
+log "$SUMMARY"
 echo ""
 
 
