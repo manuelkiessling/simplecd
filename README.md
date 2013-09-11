@@ -43,6 +43,10 @@ SimpleCD will try to execute each step by executing these scripts in the order
 shown above. If a script is missing, this step is simply skipped. If executing
 a script results in a status code > 0, the delivery is aborted.
 
+You can additionally add a file `_simplecd/logreceivers.txt` with one mail
+address per line. If the file is present, a report of the run will be sent to
+the listed mail addresses.
+
 
 ## Usage
 

@@ -15,7 +15,7 @@
 #    c. run-e2e-tests-for-staging
 #    d. deploy-to-production
 #    e. run-e2e-tests-for-production
-# 5. Mail results to the receivers listed in _simplecd/mailreceivers
+# 5. Mail results to the receivers listed in _simplecd/logreceivers
 #
 # For steps a to e, the rule is that they must return exit code 0 on success
 # and exit code > 0 on failure. If any of these steps fail, the delivery is
@@ -59,13 +59,14 @@ abort () {
 log () {
   LOG="$LOG
 
-  $1"
+$1"
 }
 
 mail_log () {
   if [ -f $REPODIR/_simplecd/logreceivers.txt ]; then
     echo "$LOG" > $WORKINGDIR/log.$HASH
     while read MR; do
+      echo "Mailing log of this run to $MR..."
       mail -aFrom:simplecd@example.com -s "SimpleCD run log" $MR < $WORKINGDIR/log.$HASH
     done < $REPODIR/_simplecd/logreceivers.txt
   fi
@@ -138,7 +139,7 @@ touch $CONTROLFILE
 echo ""
 echo "Starting delivery of branch $BRANCH from repo $REPO, hash of this run is $HASH"
 echo ""
-log "Log for delivery of branch $BRANCH from repo $REPO, hash if this run was $HASH"
+log "Log for delivery of branch $BRANCH from repo $REPO, hash of this run was $HASH"
 
 # Prepare and check the environment
 
