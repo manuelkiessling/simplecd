@@ -24,24 +24,29 @@ to start deliveries.
 ## Preparing your application
 
 SimpleCD depends on some special files being present in your application's
-Git repository, the so-called SimpleCD run scripts - one for earch step of a
+Git repository, the so-called SimpleCD step scripts - one for earch step of a
 continuous delivery run.
 
-These are:
+You can create up to 100 step scripts, each with a unique leading number between
+00 and 99 followed by a dash (-).
 
- * `run-unit-tests`
- * `deploy-to-staging`
- * `run-e2e-tests-for-staging`
- * `deploy-to-production`
- * `run-e2e-tests-for-production`
+Here are some examples:
 
-The names probably speak for themselves. These files must be placed in a
-subfolder of your project's repository named `_simplecd`, and must be set to
-executable.
+* `00-run-unit-tests`
+* `10-deploy-to-staging`
+* `20-run-migrations-on-staging`
+* `30-run-e2e-tests-for-staging`
+
+and so on. Hint: If you start by numbering your initial step scripts with
+00, 10, 20... instead of 00, 01, 02..., then later it's much easier to add
+new steps between existing steps.
+
+These files must be placed in a subfolder of your project's repository named
+`_simplecd`, and they must be set to executable.
 
 SimpleCD will try to execute each step by executing these scripts in the order
-shown above. If a script is missing, this step is simply skipped. If executing
-a script results in a status code > 0, the delivery is aborted.
+shown above. If executing a script results in a status code > 0, then the
+delivery is aborted.
 
 Additionally, you can add a file `_simplecd/logreceivers.txt` with one mail
 address per line. If the file is present, a report of the run will be sent to
@@ -57,25 +62,14 @@ The following steps are executed:
 1. Check if an instance of the given plan is already running, exit if yes
 2. Check if the remote repo is newer than what was last delivered
 3. Pull the newest code from the remote repository
-4. Run the scripts that are provided by the repository in subfolder `_simplecd`:
-  1. `run-unit-tests`
-  2. `deploy-to-staging`
-  3. `run-e2e-tests-for-staging`
-  4. `deploy-to-production`
-  5. `run-e2e-tests-for-production`
+4. Run the step scripts that are provided by the repository in subfolder
+   `_simplecd`.
 5. Mail results to the receivers listed in `_simplecd/logreceivers.txt`
-
-For steps 4.1 to 4.5, the rule is that they must return exit code 0 on success
-and exit code > 0 on failure. If any of these steps fail, the delivery is
-aborted.
 
 SimpleCD will call every script with the path to the local repository clone,
 e.g.
 
-`./_simplecd/run-unit-tests /var/tmp/simplecd/projects/e70081c0e267ac64454c27f5e600d214`
-
-If the script file for a given step is not found, SimpleCD simply skips this
-step and continues with the next step.
+`./_simplecd/00-run-unit-tests /var/tmp/simplecd/projects/e70081c0e267ac64454c27f5e600d214`
 
 If the keyword *reset* is provided as the third parameter, SimpleCD does not
 start a delivery, but instead removes all working data related to the given

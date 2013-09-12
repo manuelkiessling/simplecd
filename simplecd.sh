@@ -42,22 +42,17 @@ mail_log () {
 
 run_project_script () {
   STATUS=0
-  if [ ! -f $REPODIR/_simplecd/$1 ]; then
-    echo "Cannot find script _simplecd/$1, skipping."
-    log "Skipped step $1"
-  else
-    echo "Starting project's $1 script..."
-    log ""
-    log "Output of project's $1 script:
+  echo "Starting project's $1 script..."
+  log ""
+  log "Output of project's $1 script:
 #######################################"
-    echo ""
-    OUTPUT=`$REPODIR/_simplecd/$1 $REPODIR`
-    STATUS=$?
-    echo "$OUTPUT"
-    log "$OUTPUT"
-    echo ""
-    echo "Finished executing project's $1 script."
-  fi
+  echo ""
+  OUTPUT=`$REPODIR/_simplecd/$1 $REPODIR`
+  STATUS=$?
+  echo "$OUTPUT"
+  log "$OUTPUT"
+  echo ""
+  echo "Finished executing project's $1 script."
 
   if [ ! $STATUS -eq 0 ]; then
     abort "Error while executing project's $1 script. Aborting..."
@@ -163,11 +158,9 @@ echo ""
 
 ## Run delivery steps from repository ##########################################
 
-run_project_script run-unit-tests
-run_project_script deploy-to-staging
-run_project_script run-e2e-tests-for-staging
-run_project_script deploy-to-production
-run_project_script run-e2e-tests-for-production
+for STEPFILENAME in `ls $REPODIR/_simplecd/[0-9][0-9]-* | sort | rev | cut -d"/" -f1 | rev`; do
+  run_project_script $STEPFILENAME
+done
 
 
 # Clean up the control file and finish
