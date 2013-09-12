@@ -67,12 +67,17 @@ run_project_script () {
 REPO=$1
 BRANCH=$2
 
-HASH=`echo "$0 $REPO $BRANCH" | md5sum | cut -d" " -f1`
+if [ -x /sbin/md5 ]; then
+  MD5BIN=/sbin/md5
+else
+  MD5BIN=/usr/bin/md5sum
+fi
+
+HASH=`echo "$0 $REPO $BRANCH" | $MD5SUM | cut -d" " -f1`
 WORKINGDIR=/var/tmp/simplecd
 PROJECTSDIR=$WORKINGDIR/projects
 REPODIR=/var/tmp/simplecd/projects/$HASH
 CONTROLFILE=/var/tmp/simplecd/controlfile.$HASH
-
 
 # Did the user provide the parameter "reset"? In this case
 # we remove everything we know about the given repo/branch combination
