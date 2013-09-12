@@ -66,10 +66,11 @@ The following steps are executed:
    `_simplecd`.
 5. Mail results to the receivers listed in `_simplecd/logreceivers.txt`
 
-SimpleCD will call every script with the path to the local repository clone,
-e.g.
+SimpleCD will call every script with the path to the local repository clone
+as the first parameter, and with the name of the branch as the second parameter,
+like this:
 
-`./_simplecd/00-run-unit-tests /var/tmp/simplecd/projects/e70081c0e267ac64454c27f5e600d214`
+`./_simplecd/00-run-unit-tests /var/tmp/simplecd/projects/e70081c0e267ac64454c27f5e600d214 master`
 
 If the keyword *reset* is provided as the third parameter, SimpleCD does not
 start a delivery, but instead removes all working data related to the given
