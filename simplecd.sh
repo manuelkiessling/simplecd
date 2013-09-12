@@ -73,7 +73,7 @@ else
   MD5BIN=/usr/bin/md5sum
 fi
 
-HASH=`echo "$0 $REPO $BRANCH" | $MD5SUM | cut -d" " -f1`
+HASH=`echo "$0 $REPO $BRANCH" | $MD5BIN | cut -d" " -f1`
 WORKINGDIR=/var/tmp/simplecd
 PROJECTSDIR=$WORKINGDIR/projects
 REPODIR=/var/tmp/simplecd/projects/$HASH
