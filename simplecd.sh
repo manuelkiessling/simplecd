@@ -20,7 +20,7 @@ abort () {
   echo $1
   echo ""
   mail_log "failure"
-  rm $CONTROLFILE
+  rm -f $CONTROLFILE
   exit 1
 }
 
@@ -129,6 +129,7 @@ REMOTECOMMITID=`git ls-remote $REPO refs/heads/$BRANCH | cut -f1`
 
 if [ "$LASTCOMMITID" = "$REMOTECOMMITID" ]; then
   echo "Remote commit id ($REMOTECOMMITID) has not changed since last run, won't deliver. Aborting..."
+  rm -f $CONTROLFILE
   exit 0
 fi
 
