@@ -24,7 +24,7 @@ to start deliveries.
 ## Preparing your application
 
 SimpleCD depends on some special files being present in your application's
-Git repository, the so-called SimpleCD step scripts - one for earch step of a
+Git repository, the so-called SimpleCD step scripts - one for each step of a
 continuous delivery run.
 
 You can create up to 100 step scripts, each with a unique leading number between
