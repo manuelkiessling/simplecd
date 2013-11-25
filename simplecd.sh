@@ -35,7 +35,7 @@ mail_log () {
     echo "$LOG" > $WORKINGDIR/log.$HASH
     while read MR; do
       echo "Mailing log of this run to $MR..."
-      mail -aFrom:simplecd@example.com -s "[simplecd][$1] $REPO - $BRANCH" $MR < $WORKINGDIR/log.$HASH
+      mail -aFrom:simplecd@`hostname --fqdn` -s "[simplecd][$1] $REPO - $BRANCH" $MR < $WORKINGDIR/log.$HASH
     done < $REPODIR/_simplecd/logreceivers.txt
   fi
 }
