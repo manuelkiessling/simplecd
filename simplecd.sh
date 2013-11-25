@@ -47,7 +47,7 @@ run_project_script () {
   log "Output of project's $1 script:
 #######################################"
   echo ""
-  OUTPUT=`$REPODIR/_simplecd/$1 $REPODIR $BRANCH`
+  OUTPUT=`$REPODIR/_simplecd/$1 $REPODIR $BRANCH 2>&1`
   STATUS=$?
   echo "$OUTPUT"
   log "$OUTPUT"
