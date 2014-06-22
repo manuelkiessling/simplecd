@@ -1,5 +1,6 @@
 # Simple Continuous Delivery
 
+
 ## About
 
 SimpleCD is a Continuous Delivery system written for the Bash shell.
@@ -55,35 +56,43 @@ the listed mail addresses.
 
 ## Usage
 
-`simplecd.sh <repo-url> <branch> [reset|<url>]`
+`simplecd.sh <mode> <source> <repo-url> [reset|<url>]`
+
+**Examples:**
+
+Monitor branch "foo" for new commits:
+
+`simplecd.sh branch foo https://github.com/johndoe/example.git`
+
+Monitor repo for new tags matching *release-** pattern:
+
+`simplecd.sh tag release-* https://github.com/johndoe/example.git`
+
 
 The following steps are executed:
 
 1. Check if an instance of the given plan is already running, exit if yes
-2. Check if the remote repo is newer than what was last delivered
 3. Pull the newest code from the remote repository
+2. Check if the repo is newer than what was last delivered (new commit in branch or new matching tag)
 4. Run the step scripts that are provided by the repository in subfolder
    `_simplecd`.
 5. Mail results to the receivers listed in `_simplecd/logreceivers.txt`
 
 SimpleCD will call every script with the path to the local repository clone
-as the first parameter, and with the name of the branch as the second parameter,
+as the first parameter, and with the name of the branch or matched tag as the second parameter,
 like this:
 
 `./_simplecd/00-run-unit-tests /var/tmp/simplecd/projects/e70081c0e267ac64454c27f5e600d214 master`
 
-If the keyword *reset* is provided as the third parameter, SimpleCD does not
+`./_simplecd/00-run-unit-tests /var/tmp/simplecd/projects/e70081c0e267ac64454c27f5e600d214 release-1.0.3`
+
+If the keyword *reset* is provided as the fourth parameter, SimpleCD does not
 start a delivery, but instead removes all working data related to the given
-repo/branch combination, that is, SimpleCD resets its environment to a state
-as if no previous runs for this repo/branch had occured.
+mode/repo/source combination, that is, SimpleCD resets its environment to a state
+as if no previous runs for this mode/repo/source had occurred.
 
 If instead an HTTP URL is provided as the third parameter, SimpleCD will
 prefix any commit id it outputs with this URL.
-
-Start a delivery by running SimpleCD with a git repository URL as the first,
-and a branch name as the second parameter:
-
-    simplecd.sh git@github.com:johndoe/foobar.git master
 
 
 ## License 
