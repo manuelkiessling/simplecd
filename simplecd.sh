@@ -31,12 +31,12 @@ $1"
 }
 
 mail_log () {
-  if [ -f $REPODIR/_simplecd/logreceivers.txt ]; then
+  if [ -f $REPODIR/$SIMPLECDPROJECTDIR/logreceivers.txt ]; then
     echo "$LOG" > $WORKINGDIR/log.$HASH
     while read MR; do
       echo "Mailing log of this run to $MR..."
       mail -aFrom:simplecd@`hostname --fqdn` -s "[simplecd][$1] $REPO - $SOURCE" $MR < $WORKINGDIR/log.$HASH
-    done < $REPODIR/_simplecd/logreceivers.txt
+    done < $REPODIR/$SIMPLECDPROJECTDIR/logreceivers.txt
   fi
 }
 
@@ -47,7 +47,7 @@ run_project_script () {
   log "Output of project's $1 script:
 #######################################"
   echo ""
-  OUTPUT=`$REPODIR/_simplecd/$1 $MODE $REPODIR $CHECKOUTSOURCE 2>&1`
+  OUTPUT=`$REPODIR/$SIMPLECDPROJECTDIR/$1 $MODE $REPODIR $CHECKOUTSOURCE 2>&1`
   STATUS=$?
   echo "$OUTPUT"
   log "$OUTPUT"
@@ -198,9 +198,13 @@ log "$SUMMARY"
 echo ""
 
 
+SIMPLECDPROJECTDIR=_simplecd
+source $REPODIR/.simplecd
+
+
 ## Run delivery steps from repository ##########################################
 
-for STEPFILENAME in `ls $REPODIR/_simplecd/[0-9][0-9]-* | sort | rev | cut -d"/" -f1 | rev`; do
+for STEPFILENAME in `ls $REPODIR/$SIMPLECDPROJECTDIR/[0-9][0-9]-* | sort | rev | cut -d"/" -f1 | rev`; do
   run_project_script $STEPFILENAME
 done
 
