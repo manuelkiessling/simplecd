@@ -164,7 +164,7 @@ fi
 if [ "$MODE" = "tag" ]; then
   # Check if a new tag matching the pattern exists
   LASTTAG=`cat $WORKINGDIR/last_tag.$HASH 2> /dev/null`
-  LASTEXISTINGTAG=`git tag -l $SOURCE | tail -n1`
+  LASTEXISTINGTAG=`git tag -l $SOURCE | sort -r | tail -n1`
   if [ "$LASTTAG" = "$LASTEXISTINGTAG" ]; then
     echo "No tag newer than '$LASTTAG' found, won't deliver. Aborting..."
     rm -f $CONTROLFILE
