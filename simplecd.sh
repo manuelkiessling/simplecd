@@ -182,7 +182,7 @@ fi
 if [ "$MODE" = "tag" ]; then
   # Check if a new tag matching the pattern exists
   LASTTAG=`cat $LASTTAGFILE 2> /dev/null`
-  LASTEXISTINGTAG=`git ls-remote --tags $REPO $SOURCE | cut -f2 | sort --version-sort | cut -d/ -f3`
+  LASTEXISTINGTAG=`git ls-remote --tags $REPO $SOURCE | cut -f2 | sort --version-sort | cut -d/ -f3 | tail -n1`
   if [ "$LASTTAG" = "$LASTEXISTINGTAG" ]; then
     echo "No tag newer than '$LASTTAG' found, won't deliver. Aborting..."
     rm -f $CONTROLFILE
