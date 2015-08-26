@@ -10,7 +10,7 @@ PATH=$PATH:/bin:/usr/bin:/usr/sbin:/usr/local/bin
 shutdown () {
   echo $1
   echo ""
-  mail_log "success"
+  send_maillog "success"
   rm -f $CONTROLFILE
   exit 0
 }
@@ -18,23 +18,23 @@ shutdown () {
 abort () {
   echo $1
   echo ""
-  mail_log "failure"
+  send_maillog "failure"
   rm -f $CONTROLFILE
   exit 1
 }
 
-log () {
-  LOG="$LOG
+append_to_maillog () {
+  MAILLOG="$MAILLOG
 
 $1"
 }
 
-mail_log () {
+send_maillog () {
   if [ -f $REPODIR/$SCRIPTSDIR/logreceivers.txt ]; then
-    echo "$LOG" > $WORKINGDIR/log.$HASH
+    echo "$MAILLOG" > $WORKINGDIR/maillog.$HASH
     while read MR; do
       echo "Mailing log of this run to $MR..."
-      mail -aFrom:`whoami`@`hostname --fqdn` -s "[simplecd][$1] $REPO - $SOURCE" $MR < $WORKINGDIR/log.$HASH
+      mail -aFrom:`whoami`@`hostname --fqdn` -s "[simplecd][$1] $REPO - $SOURCE" $MR < $WORKINGDIR/maillog.$HASH
     done < $REPODIR/$SCRIPTSDIR/logreceivers.txt
   fi
 }
@@ -42,14 +42,14 @@ mail_log () {
 run_project_script () {
   STATUS=0
   echo "Starting project's $1 script..."
-  log ""
-  log "Output of project's $1 script:
+  append_to_maillog ""
+  append_to_maillog "Output of project's $1 script:
 #######################################"
   echo ""
   OUTPUT=`$REPODIR/$SCRIPTSDIR/$1 $MODE $REPODIR $CHECKOUTSOURCE 2>&1`
   STATUS=$?
   echo "$OUTPUT"
-  log "$OUTPUT"
+  append_to_maillog "$OUTPUT"
   echo ""
   echo "Finished executing project's $1 script."
 
@@ -122,7 +122,7 @@ if [ "$4" = "reset" ]; then
   if [ "$MODE" = "tag" ]; then
     rm -f $WORKINGDIR/last_tag.$HASH
   fi
-  rm -f $WORKINGDIR/log.$HASH
+  rm -f $WORKINGDIR/maillog.$HASH
   rm -rf $REPODIR
   rm -f $CONTROLFILE
   echo "done."
@@ -155,7 +155,7 @@ touch $CONTROLFILE
 echo ""
 echo "Starting delivery of source $SOURCE from repo $REPO in mode $MODE, hash of this run is $HASH"
 echo ""
-log "Log for delivery of source $SOURCE from repo $REPO in mode $MODE, hash of this run was $HASH"
+append_to_maillog "Log for delivery of source $SOURCE from repo $REPO in mode $MODE, hash of this run was $HASH"
 
 
 # Resolve source and check for new content
@@ -216,7 +216,7 @@ SUMMARY="
          at: `git log -n 1 $CURRENTCOMMITID --pretty=format:'%aD'`
         msg: `git log -n 1 $CURRENTCOMMITID --pretty=format:'%s'`"
 echo "$SUMMARY"
-log "$SUMMARY"
+append_to_maillog "$SUMMARY"
 echo ""
 
 
