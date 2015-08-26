@@ -2,11 +2,10 @@
 
 # Main script for Simple Continuous Delivery
 
-
 PATH=$PATH:/bin:/usr/bin:/usr/sbin:/usr/local/bin
 
 
-# Function #################################################################
+# Functions #################################################################
 
 shutdown () {
   echo $1
@@ -62,6 +61,23 @@ run_project_script () {
 }
 
 
+# Sanity checks #############################################################
+
+# Verify that we have git
+
+git --version > /dev/null 2>&1
+if [ ! $? -eq 0 ]; then
+  abort "Git not available. Aborting..."
+fi
+
+# Verify that we have a modern version of sort
+
+echo "foo" | sort --version-sort > /dev/null 2>&1
+if [ ! $? -eq 0 ]; then
+  abort "Your version of sort does not support --version-sort. Aborting..."
+fi
+
+
 # Main routine #################################################################
 
 MODE=$1 # "branch" or "tag"
@@ -90,8 +106,10 @@ fi
 HASH=`echo "$0 $MODE $REPO $SOURCE" | $MD5BIN | cut -d" " -f1`
 WORKINGDIR=/var/tmp/simplecd
 PROJECTSDIR=$WORKINGDIR/projects
-REPODIR=/var/tmp/simplecd/projects/$HASH
-CONTROLFILE=/var/tmp/simplecd/controlfile.$HASH
+REPODIR=$PROJECTSDIR/$HASH
+CONTROLFILE=$WORKINGDIR/controlfile.$HASH
+LASTCOMMITIDFILE=$WORKINGDIR/last_commit_id.$HASH
+LASTTAGFILE=$WORKINGDIR/last_tag.$HASH
 
 # Did the user provide the parameter "reset"? In this case
 # we remove everything we know about the given repo/branch combination
@@ -139,39 +157,43 @@ echo "Starting delivery of source $SOURCE from repo $REPO in mode $MODE, hash of
 echo ""
 log "Log for delivery of source $SOURCE from repo $REPO in mode $MODE, hash of this run was $HASH"
 
-rm -rf $REPODIR
-git clone $REPO $REPODIR 2>&1 | while IFS= read -r line;do echo " [GIT CLONE] $line";done
-cd $REPODIR
-git fetch
-
 
 # Resolve source and check for new content
 
 if [ "$MODE" = "branch" ]; then
   RESOLVEDSOURCE=refs/heads/$SOURCE
   # Check if a new commit id is in the remote repo
-  LASTCOMMITID=`cat $WORKINGDIR/last_commit_id.$HASH 2> /dev/null`
+  LASTCOMMITID=`cat $LASTCOMMITIDFILE 2> /dev/null`
   REMOTECOMMITID=`git ls-remote $REPO $RESOLVEDSOURCE | cut -f1`
   if [ "$LASTCOMMITID" = "$REMOTECOMMITID" ]; then
     echo "Remote commit id ($REMOTECOMMITID) has not changed since last run, won't deliver. Aborting..."
     rm -f $CONTROLFILE
     exit 0
   fi
+  rm -rf $REPODIR
+  git clone $REPO $REPODIR 2>&1 | while IFS= read -r line;do echo " [GIT CLONE] $line";done
+  cd $REPODIR
+  git fetch
   CURRENTCOMMITID=`git log -n 1 $RESOLVEDSOURCE --pretty=format:"%H"`
-  echo $CURRENTCOMMITID > $WORKINGDIR/last_commit_id.$HASH
+  echo $CURRENTCOMMITID > $LASTCOMMITIDFILE
   CHECKOUTSOURCE=$SOURCE
 fi
+
 if [ "$MODE" = "tag" ]; then
   # Check if a new tag matching the pattern exists
-  LASTTAG=`cat $WORKINGDIR/last_tag.$HASH 2> /dev/null`
-  LASTEXISTINGTAG=`git tag -l $SOURCE | xargs -I@ git log --format=format:"%ai @%n" -1 @ | sort | awk '{print $4}' | tail -n1`
+  LASTTAG=`cat $LASTTAGFILE 2> /dev/null`
+  LASTEXISTINGTAG=`git ls-remote --tags $REPO $SOURCE | cut -f2 | sort --version-sort | cut -d/ -f3`
   if [ "$LASTTAG" = "$LASTEXISTINGTAG" ]; then
     echo "No tag newer than '$LASTTAG' found, won't deliver. Aborting..."
     rm -f $CONTROLFILE
     exit 0
   fi
+  rm -rf $REPODIR
+  git clone $REPO $REPODIR 2>&1 | while IFS= read -r line;do echo " [GIT CLONE] $line";done
+  cd $REPODIR
+  git fetch
   CURRENTCOMMITID=$LASTEXISTINGTAG
-  echo $LASTEXISTINGTAG > $WORKINGDIR/last_tag.$HASH
+  echo $LASTEXISTINGTAG > $LASTTAGFILE
   RESOLVEDSOURCE=refs/tags/$LASTEXISTINGTAG
   CHECKOUTSOURCE=$LASTEXISTINGTAG
 fi
