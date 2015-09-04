@@ -170,6 +170,7 @@ if [ "$MODE" = "branch" ]; then
     rm -f $CONTROLFILE
     exit 0
   fi
+  append_to_maillog "Local known last commit id was $LASTCOMMITID, found $REMOTECOMMITID remotely."
   rm -rf $REPODIR
   git clone $REPO $REPODIR 2>&1 | while IFS= read -r line;do echo " [GIT CLONE] $line";done
   cd $REPODIR
@@ -188,6 +189,7 @@ if [ "$MODE" = "tag" ]; then
     rm -f $CONTROLFILE
     exit 0
   fi
+  append_to_maillog "Local known last tag was $LASTTAG, found $LASTEXISTINGTAG remotely."
   rm -rf $REPODIR
   git clone $REPO $REPODIR 2>&1 | while IFS= read -r line;do echo " [GIT CLONE] $line";done
   cd $REPODIR
