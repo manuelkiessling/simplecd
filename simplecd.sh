@@ -170,6 +170,11 @@ if [ "$MODE" = "branch" ]; then
     rm -f $CONTROLFILE
     exit 0
   fi
+  if [ "" = "$REMOTECOMMITID" ]; then
+    echo "Couldn't retrieve remote commit id, won't deliver. Aborting..."
+    rm -f $CONTROLFILE
+    exit 0
+  fi
   append_to_maillog "Local known last commit id was $LASTCOMMITID, found $REMOTECOMMITID remotely."
   rm -rf $REPODIR
   git clone $REPO $REPODIR 2>&1 | while IFS= read -r line;do echo " [GIT CLONE] $line";done
@@ -186,6 +191,11 @@ if [ "$MODE" = "tag" ]; then
   LASTEXISTINGTAG=`git ls-remote --tags $REPO $SOURCE | cut -f2 | sort --version-sort | cut -d/ -f3 | tail -n1`
   if [ "$LASTTAG" = "$LASTEXISTINGTAG" ]; then
     echo "No tag newer than '$LASTTAG' found, won't deliver. Aborting..."
+    rm -f $CONTROLFILE
+    exit 0
+  fi
+  if [ "" = "$LASTEXISTINGTAG" ]; then
+    echo "Couldn't retrieve remote tag, won't deliver. Aborting..."
     rm -f $CONTROLFILE
     exit 0
   fi
