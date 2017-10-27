@@ -180,7 +180,7 @@ if [ "$MODE" = "branch" ]; then
   git clone $REPO $REPODIR 2>&1 | while IFS= read -r line;do echo " [GIT CLONE] $line";done
   cd $REPODIR
   git fetch
-  CURRENTCOMMITID=`git log -n 1 $RESOLVEDSOURCE --pretty=format:"%H"`
+  CURRENTCOMMITID=$REMOTECOMMITID
   echo $CURRENTCOMMITID > $LASTCOMMITIDFILE
   CHECKOUTSOURCE=$SOURCE
 fi
