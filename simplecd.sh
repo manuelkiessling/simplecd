@@ -46,9 +46,10 @@ run_project_script () {
   append_to_maillog "Output of project's $1 script:
 #######################################"
   echo ""
-  OUTPUT=`$REPODIR/$SCRIPTSDIR/$1 $MODE $REPODIR $CHECKOUTSOURCE 2>&1`
+  $REPODIR/$SCRIPTSDIR/$1 $MODE $REPODIR $CHECKOUTSOURCE > >(tee -a $WORKINGDIR/$HASH.script.$1.log) 2> >(tee -a $WORKINGDIR/$HASH.script.$1.log >&2)
   STATUS=$?
-  echo "$OUTPUT"
+  OUTPUT=`cat $WORKINGDIR/$HASH.script.$1.log`
+  rm $WORKINGDIR/$HASH.script.$1.log
   append_to_maillog "$OUTPUT"
   echo ""
   echo "Finished executing project's $1 script."
