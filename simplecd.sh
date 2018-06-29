@@ -10,6 +10,7 @@ PATH=$PATH:/bin:/usr/bin:/usr/sbin:/usr/local/bin
 shutdown () {
   echo $1
   echo ""
+  prepend_to_maillog "Result: success."
   send_maillog "success"
   rm -f $CONTROLFILE
   exit 0
@@ -18,9 +19,18 @@ shutdown () {
 abort () {
   echo $1
   echo ""
+  prepend_to_maillog "$1"
+  prepend_to_maillog "Result: failure."
   send_maillog "failure"
   rm -f $CONTROLFILE
   exit 1
+}
+
+
+prepend_to_maillog () {
+  MAILLOG="$1
+
+$MAILLOG"
 }
 
 append_to_maillog () {
