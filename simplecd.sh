@@ -41,10 +41,11 @@ $1"
 
 send_maillog () {
   if [ -f $REPODIR/$SCRIPTSDIR/logreceivers.txt ]; then
-    echo "$MAILLOG" > $WORKINGDIR/maillog.$HASH
-    while read MR; do
-      echo "Mailing log of this run to $MR..."
-      mail -aFrom:`whoami`@`hostname --fqdn` -s "[simplecd][$1] $REPO - $SOURCE" $MR < $WORKINGDIR/maillog.$HASH
+    echo "$SUMMARY" > $WORKINGDIR/maillog.$HASH
+    echo "$MAILLOG" | tac >> $WORKINGDIR/maillog.$HASH
+    while read MAILRECEIVER; do
+      echo "Mailing log of this run to $MAILRECEIVER..."
+      mail -aFrom:`whoami`@`hostname --fqdn` -s "[simplecd][$1] $REPO - $SOURCE" $MAILRECEIVER < $WORKINGDIR/maillog.$HASH
     done < $REPODIR/$SCRIPTSDIR/logreceivers.txt
   fi
 }
@@ -239,7 +240,6 @@ SUMMARY="
          at: `git log -n 1 $CURRENTCOMMITID --pretty=format:'%aD'`
         msg: `git log -n 1 $CURRENTCOMMITID --pretty=format:'%s'`"
 echo "$SUMMARY"
-append_to_maillog "$SUMMARY"
 echo ""
 
 
