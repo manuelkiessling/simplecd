@@ -42,7 +42,12 @@ $1"
 send_maillog () {
   if [ -f $REPODIR/$SCRIPTSDIR/logreceivers.txt ]; then
     echo "$SUMMARY" > $WORKINGDIR/maillog.$HASH
-    echo "$MAILLOG" | tac >> $WORKINGDIR/maillog.$HASH
+    echo "" > $WORKINGDIR/maillog.$HASH
+    echo "" > $WORKINGDIR/maillog.$HASH
+    echo "$MAILLOG" | tail -100 >> $WORKINGDIR/maillog.$HASH
+    echo "" > $WORKINGDIR/maillog.$HASH
+    echo "" > $WORKINGDIR/maillog.$HASH
+    echo "$MAILLOG" >> $WORKINGDIR/maillog.$HASH
     while read MAILRECEIVER; do
       echo "Mailing log of this run to $MAILRECEIVER..."
       mail -aFrom:`whoami`@`hostname --fqdn` -s "[simplecd][$1] $REPO - $SOURCE" $MAILRECEIVER < $WORKINGDIR/maillog.$HASH
