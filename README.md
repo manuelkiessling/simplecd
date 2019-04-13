@@ -90,11 +90,11 @@ start a delivery, but instead removes all working data related to the given
 mode/repo/source combination, that is, SimpleCD resets its environment to a state
 as if no previous runs for this mode/repo/source had occurred.
 
-If instead an HTTP URL is provided as the third parameter, SimpleCD will
+If instead an HTTP URL is provided as the fourth parameter, SimpleCD will
 prefix any commit id it outputs with this URL.
 
 
-## License 
+## License
 
 The MIT License (MIT)
 
