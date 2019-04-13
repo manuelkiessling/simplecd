@@ -56,7 +56,7 @@ the listed mail addresses.
 
 ## Usage
 
-`simplecd.sh <mode> <source> <repo-url> [reset|<url>]`
+`simplecd.sh <mode> <source> <repo-url> [reset|<url>] [--tag-on-success]`
 
 **Examples:**
 
@@ -92,6 +92,14 @@ as if no previous runs for this mode/repo/source had occurred.
 
 If instead an HTTP URL is provided as the fourth parameter, SimpleCD will
 prefix any commit id it outputs with this URL.
+
+If a fifth parameter, `--tag-on-success`, is provided, then SimpleCD will
+annotate the rolled out commit with tag name
+`simplecd-rollout-<date in ISO 8601 format to "seconds" precision>`.
+
+Note that because colons are not allowed in git tag names, these are replaced
+with an underscore. The result looks like this:
+`simplecd-rollout-2019-04-13T10_50_43+00_00`.
 
 
 ## License

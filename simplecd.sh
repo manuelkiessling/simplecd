@@ -107,6 +107,21 @@ MODE=$1 # "branch" or "tag"
 SOURCE=$2
 REPO=$3
 
+if [ "$4" = "reset" ]; then
+    DORESET="yes"
+elif [ "$4" = "--tag-on-success" ]; then
+    TAGONSUCCESS="yes"
+    DORESET="no"
+elif [ "$4" != "" ]; then
+    URLPREFIX=$4
+    DORESET="no"
+fi
+
+if [ "$5" = "--tag-on-success" ]; then
+    TAGONSUCCESS="yes"
+fi
+
+
 if [ "$MODE" = "" ]; then
   abort "Missing parameter MODE. Aborting..."
 fi
@@ -137,7 +152,7 @@ LASTTAGFILE=$WORKINGDIR/last_tag.$HASH
 # Did the user provide the parameter "reset"? In this case
 # we remove everything we know about the given repo/branch combination
 
-if [ "$4" = "reset" ]; then
+if [ "$DORESET" = "yes" ]; then
   echo "Resetting SimpleCD environment for mode $MODE, repo $REPO, source $SOURCE"
   if [ "$MODE" = "branch" ]; then
     rm -f $WORKINGDIR/last_commit_id.$HASH
@@ -151,7 +166,6 @@ if [ "$4" = "reset" ]; then
   echo "done."
   exit 0
 fi
-URLPREFIX=$4
 
 # Is another process for this mode, repo and source running?
 
@@ -263,6 +277,16 @@ source $REPODIR/.simplecd
 for STEPFILENAME in `ls $REPODIR/$SCRIPTSDIR/[0-9][0-9]-* | sort | rev | cut -d"/" -f1 | rev`; do
   run_project_script $STEPFILENAME
 done
+
+
+# Tag the rolled out commit
+
+if [ "$TAGONSUCCESS" = "yes" ]; then
+  TAGNAME="simplecd-rollout-`date --iso-8601=seconds | tr : _`"
+  TAGMESSAGE="SimpleCD rollout on `date --rfc-2822`."
+  git tag -a $TAGNAME -m "$TAGMESSAGE" $CURRENTCOMMITID
+  git push origin $TAGNAME
+fi
 
 
 # Clean up the control file and finish
