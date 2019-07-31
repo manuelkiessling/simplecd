@@ -19,6 +19,7 @@ export UNIQUEDIR=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 7 | head -n 1
 SUB_DIRECTORY=/var/www/simplecd/$UNIQUEDIR
 LOG_EXISTS=false
 PAGE_TITLE=$REPO" on "$(date '+%d.%m.%Y %H:%M:%S')
+CURDIR=$(dirname "$0")
 
 # wait until Logfile exists
 # abort if it's not available after one minute
@@ -82,7 +83,7 @@ _EOF_
 
 # use additional script for notifications e.g. Slack Webhooks
 
-[[ -f $(pwd)/notification.sh ]] && $(pwd)/notification.sh
+[[ -f $CURDIR/notification.sh ]] && $CURDIR/notification.sh
 
 LASTLINE=null
 

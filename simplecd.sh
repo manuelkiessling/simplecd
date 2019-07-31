@@ -153,6 +153,7 @@ else
 fi
 
 WORKINGDIR=/var/tmp/simplecd
+SCRIPT_SRC_DIR=$(dirname "$0")
 HASH=`echo "$0 $MODE $REPO $SOURCE" | $MD5BIN | cut -d" " -f1`
 PROJECTSDIR=$WORKINGDIR/projects
 REPODIR=$PROJECTSDIR/$HASH
@@ -162,7 +163,7 @@ LASTTAGFILE=$WORKINGDIR/last_tag.$HASH
 echo $HASH
 
 # Make log accessible via browser
-$(pwd)/webmonitor.sh $WORKINGDIR/templog.$HASH.txt $3 &
+$SCRIPT_SRC_DIR/webmonitor.sh $WORKINGDIR/templog.$HASH.txt $3 &
 
 
 
