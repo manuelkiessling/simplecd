@@ -162,11 +162,6 @@ LASTCOMMITIDFILE=$WORKINGDIR/last_commit_id.$HASH
 LASTTAGFILE=$WORKINGDIR/last_tag.$HASH
 echo $HASH
 
-# Make log accessible via browser
-$SCRIPT_SRC_DIR/webmonitor.sh $WORKINGDIR/templog.$HASH.txt $3 &
-
-
-
 # Did the user provide the parameter "reset"? In this case
 # we remove everything we know about the given repo/branch combination
 
@@ -262,6 +257,10 @@ if [ "$MODE" = "tag" ]; then
   RESOLVEDSOURCE=refs/tags/$LASTEXISTINGTAG
   CHECKOUTSOURCE=$LASTEXISTINGTAG
 fi
+
+# Make log accessible via browser
+$SCRIPT_SRC_DIR/webmonitor.sh $WORKINGDIR/templog.$HASH.txt $3 &
+
 
 
 # Checkout the source
