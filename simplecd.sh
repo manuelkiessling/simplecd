@@ -84,14 +84,13 @@ run_project_script () {
 }
 
 append_to_log () {
-    echo $1 | tee -a $WORKINGDIR/templog.txt
-
+    if [[ -z $HASH ]]
+    then
+        echo $1
+     else
+        echo $1 | tee -a $WORKINGDIR/templog.$HASH.txt
+    fi
 }
-
-WORKINGDIR=/var/tmp/simplecd
-# Make log accessible via browser
-./webmonitor.sh $WORKINGDIR/templog.txt $3 &
-
 
 # Sanity checks #############################################################
 
@@ -153,12 +152,19 @@ else
   MD5BIN=/usr/bin/md5sum
 fi
 
+WORKINGDIR=/var/tmp/simplecd
 HASH=`echo "$0 $MODE $REPO $SOURCE" | $MD5BIN | cut -d" " -f1`
 PROJECTSDIR=$WORKINGDIR/projects
 REPODIR=$PROJECTSDIR/$HASH
 CONTROLFILE=$WORKINGDIR/controlfile.$HASH
 LASTCOMMITIDFILE=$WORKINGDIR/last_commit_id.$HASH
 LASTTAGFILE=$WORKINGDIR/last_tag.$HASH
+echo $HASH
+
+# Make log accessible via browser
+$(pwd)/webmonitor.sh $WORKINGDIR/templog.$HASH.txt $3 &
+
+
 
 # Did the user provide the parameter "reset"? In this case
 # we remove everything we know about the given repo/branch combination

@@ -23,16 +23,15 @@ PAGE_TITLE=$REPO" on "$(date '+%d.%m.%Y %H:%M:%S')
 # wait until Logfile exists
 # abort if it's not available after one minute
 let w=0
-until $LOG_EXISTS || [[ $w -le 11 ]]
+until $LOG_EXISTS || [[ $w -gt 11 ]]
 do
     [[ -f $LOGFILE ]] && LOG_EXISTS=true || sleep 5
-    echo $w;
     let w=$w+1
 done
 
 if [[ $w > 11 ]]
 then
-    echo "Logfile does not exist. Aborting..."
+    echo "Logfile does not exist. Aborting..." > $LOGFILE
     exit 1
 fi
 
@@ -81,9 +80,9 @@ cat > $SUB_DIRECTORY/index.html \
      </html>
 _EOF_
 
-# use additional skript for notifications e.g. Slack Webhooks
+# use additional script for notifications e.g. Slack Webhooks
 
-[[ -f ./notification.sh ]] && notification.sh
+[[ -f $(pwd)/notification.sh ]] && $(pwd)/notification.sh
 
 LASTLINE=null
 
