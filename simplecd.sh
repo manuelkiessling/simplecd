@@ -8,8 +8,8 @@ PATH=$PATH:/bin:/usr/bin:/usr/sbin:/usr/local/bin
 # Functions #################################################################
 
 shutdown () {
-  append_to_log $1
-  append_to_log ""
+  echo $1
+  echo ""
   prepend_to_maillog "Result: success."
   send_maillog "success"
   rm -f $CONTROLFILE
@@ -17,8 +17,8 @@ shutdown () {
 }
 
 abort () {
-  append_to_log $1
-  append_to_log ""
+  echo $1
+  echo ""
   prepend_to_maillog "$1"
   prepend_to_maillog "Result: failure."
   send_maillog "failure"
@@ -34,6 +34,7 @@ $MAILLOG"
 }
 
 append_to_maillog () {
+  $1 >> $WORKINGDIR/templog.$HASH.txt
   MAILLOG="$MAILLOG
 
 $1"
@@ -63,33 +64,24 @@ send_maillog () {
 
 run_project_script () {
   STATUS=0
-  append_to_log "Starting project's $1 script..."
+  echo "Starting project's $1 script..."
   append_to_maillog ""
   append_to_maillog "Output of project's $1 script:
 #######################################"
-  append_to_log ""
+  echo ""
   $REPODIR/$SCRIPTSDIR/$1 $MODE $REPODIR $CHECKOUTSOURCE > >(tee -a $WORKINGDIR/$HASH.script.$1.log) 2> >(tee -a $WORKINGDIR/$HASH.script.$1.log >&2)
   STATUS=$?
   OUTPUT=`cat $WORKINGDIR/$HASH.script.$1.log`
   rm $WORKINGDIR/$HASH.script.$1.log
   append_to_maillog "$OUTPUT"
-  append_to_log ""
-  append_to_log "Finished executing project's $1 script."
+  echo ""
+  echo "Finished executing project's $1 script."
 
   if [ ! $STATUS -eq 0 ]; then
     abort "Error while executing project's $1 script. Aborting..."
   fi
 
-  append_to_log ""
-}
-
-append_to_log () {
-    if [[ -z $HASH ]]
-    then
-        echo $1
-     else
-        echo $1 | tee -a $WORKINGDIR/templog.$HASH.txt
-    fi
+  echo ""
 }
 
 # Sanity checks #############################################################
@@ -160,13 +152,12 @@ REPODIR=$PROJECTSDIR/$HASH
 CONTROLFILE=$WORKINGDIR/controlfile.$HASH
 LASTCOMMITIDFILE=$WORKINGDIR/last_commit_id.$HASH
 LASTTAGFILE=$WORKINGDIR/last_tag.$HASH
-echo $HASH
 
 # Did the user provide the parameter "reset"? In this case
 # we remove everything we know about the given repo/branch combination
 
 if [ "$DORESET" = "yes" ]; then
-  append_to_log "Resetting SimpleCD environment for mode $MODE, repo $REPO, source $SOURCE"
+  echo "Resetting SimpleCD environment for mode $MODE, repo $REPO, source $SOURCE"
   if [ "$MODE" = "branch" ]; then
     rm -f $WORKINGDIR/last_commit_id.$HASH
   fi
@@ -176,17 +167,18 @@ if [ "$DORESET" = "yes" ]; then
   rm -f $WORKINGDIR/maillog.$HASH
   rm -rf $REPODIR
   rm -f $CONTROLFILE
-  append_to_log "done."
+  echo "done."
   exit 0
 fi
 
 # Is another process for this mode, repo and source running?
 
 if [ -f $CONTROLFILE ]; then
-  append_to_log "Because the control file $CONTROLFILE exists, I assume that another instance is still running. Aborting..."
+  echo "Because the control file $CONTROLFILE exists, I assume that another instance is still running. Aborting..."
   exit 1
 fi
 
+rm  $WORKINGDIR/templog.$HASH.txt
 # Prepare and check the environment
 
 mkdir -p $PROJECTSDIR
@@ -200,9 +192,9 @@ fi
 touch $CONTROLFILE
 
 # Let's go
-append_to_log ""
-append_to_log "Starting delivery of source $SOURCE from repo $REPO in mode $MODE, hash of this run is $HASH"
-append_to_log ""
+echo ""
+echo "Starting delivery of source $SOURCE from repo $REPO in mode $MODE, hash of this run is $HASH"
+echo ""
 append_to_maillog "Log for delivery of source $SOURCE from repo $REPO in mode $MODE, hash of this run was $HASH"
 
 
@@ -214,22 +206,22 @@ if [ "$MODE" = "branch" ]; then
   LASTCOMMITID=`cat $LASTCOMMITIDFILE 2> /dev/null`
   REMOTECOMMITID=`git ls-remote $REPO $RESOLVEDSOURCE | cut -f1`
   if [ "$LASTCOMMITID" = "$REMOTECOMMITID" ]; then
-    append_to_log "Remote commit id ($REMOTECOMMITID) has not changed since last run, won't deliver. Aborting..."
+    echo "Remote commit id ($REMOTECOMMITID) has not changed since last run, won't deliver. Aborting..."
     rm -f $CONTROLFILE
     exit 0
   fi
   if [ "" = "$REMOTECOMMITID" ]; then
-    append_to_log "Couldn't retrieve remote commit id, won't deliver. Aborting..."
+    echo "Couldn't retrieve remote commit id, won't deliver. Aborting..."
     rm -f $CONTROLFILE
     exit 0
   fi
   append_to_maillog "Local known last commit id was $LASTCOMMITID, found $REMOTECOMMITID remotely."
   rm -rf $REPODIR
-  git clone $REPO $REPODIR 2>&1 | while IFS= read -r line;do append_to_log " [GIT CLONE] $line";done
+  git clone $REPO $REPODIR 2>&1 | while IFS= read -r line;do echo " [GIT CLONE] $line";done
   cd $REPODIR
   git fetch
   CURRENTCOMMITID=$REMOTECOMMITID
-  append_to_log $CURRENTCOMMITID > $LASTCOMMITIDFILE
+  echo $CURRENTCOMMITID > $LASTCOMMITIDFILE
   CHECKOUTSOURCE=$SOURCE
 fi
 
@@ -238,22 +230,22 @@ if [ "$MODE" = "tag" ]; then
   LASTTAG=`cat $LASTTAGFILE 2> /dev/null`
   LASTEXISTINGTAG=`git ls-remote --tags $REPO $SOURCE | cut -f2 | sort --version-sort | cut -d/ -f3 | tail -n1`
   if [ "$LASTTAG" = "$LASTEXISTINGTAG" ]; then
-    append_to_log "No tag newer than '$LASTTAG' found, won't deliver. Aborting..."
+    echo "No tag newer than '$LASTTAG' found, won't deliver. Aborting..."
     rm -f $CONTROLFILE
     exit 0
   fi
   if [ "" = "$LASTEXISTINGTAG" ]; then
-    append_to_log "Couldn't retrieve remote tag, won't deliver. Aborting..."
+    echo "Couldn't retrieve remote tag, won't deliver. Aborting..."
     rm -f $CONTROLFILE
     exit 0
   fi
   append_to_maillog "Local known last tag was $LASTTAG, found $LASTEXISTINGTAG remotely."
   rm -rf $REPODIR
-  git clone $REPO $REPODIR 2>&1 | while IFS= read -r line;do append_to_log " [GIT CLONE] $line";done
+  git clone $REPO $REPODIR 2>&1 | while IFS= read -r line;do echo " [GIT CLONE] $line";done
   cd $REPODIR
   git fetch
   CURRENTCOMMITID=$LASTEXISTINGTAG
-  append_to_log $LASTEXISTINGTAG > $LASTTAGFILE
+  echo $LASTEXISTINGTAG > $LASTTAGFILE
   RESOLVEDSOURCE=refs/tags/$LASTEXISTINGTAG
   CHECKOUTSOURCE=$LASTEXISTINGTAG
 fi
@@ -261,17 +253,15 @@ fi
 # Make log accessible via browser
 $SCRIPT_SRC_DIR/webmonitor.sh $WORKINGDIR/templog.$HASH.txt $3 &
 
-
-
 # Checkout the source
 
-git checkout $CHECKOUTSOURCE 2>&1 | while IFS= read -r line;do append_to_log " [GIT CHECKOUT] $line";done
+git checkout $CHECKOUTSOURCE 2>&1 | while IFS= read -r line;do echo " [GIT CHECKOUT] $line";done
 
 
 # Create summary
 
-append_to_log ""
-append_to_log "This is what's going to be delivered:"
+echo ""
+echo "This is what's going to be delivered:"
 SUMMARY="
  Repository: $REPO
      Source: $MODE $RESOLVEDSOURCE
@@ -279,8 +269,8 @@ SUMMARY="
          by: `git log -n 1 $CURRENTCOMMITID --pretty=format:'%an'`
          at: `git log -n 1 $CURRENTCOMMITID --pretty=format:'%aD'`
         msg: `git log -n 1 $CURRENTCOMMITID --pretty=format:'%s'`"
-append_to_log "$SUMMARY"
-append_to_log ""
+echo "$SUMMARY"
+echo ""
 
 
 SCRIPTSDIR=_simplecd
@@ -306,6 +296,6 @@ fi
 
 # Clean up the control file and finish
 
-append_to_log ""
+echo ""
 
 shutdown "Delivery finished. Exiting..."
