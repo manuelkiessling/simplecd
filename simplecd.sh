@@ -34,7 +34,7 @@ $MAILLOG"
 }
 
 append_to_maillog () {
-  $1 >> $WORKINGDIR/templog.$HASH.txt
+  echo $1 >> $WORKINGDIR/templog.$HASH.txt
   MAILLOG="$MAILLOG
 
 $1"
