@@ -6,7 +6,7 @@
 
 #Input variables
 LOGFILE=$1
-export REPO=$2
+export REPO=$(echo $2 | cut -d '/' -f 2 | cut -d '.' -f 1)
 
 # check if input variables are not null
 if [[ $LOGFILE == "" ]]
@@ -18,8 +18,10 @@ fi
 export UNIQUEDIR=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 7 | head -n 1)
 SUB_DIRECTORY=/var/www/simplecd/$UNIQUEDIR
 LOG_EXISTS=false
-PAGE_TITLE=$REPO" on "$(date '+%d.%m.%Y %H:%M:%S')
+PAGE_TITLE="Build $REPO on $(date '+%d.%m.%Y %H:%M:%S')"
 CURDIR=$(dirname "$0")
+
+echo $PAGE_TITLE
 
 # wait until Logfile exists
 # abort if it's not available after one minute
