@@ -34,7 +34,7 @@ $MAILLOG"
 }
 
 append_to_maillog () {
-  echo "$1" >> $WORKINGDIR/templog.$HASH.txt
+  echo "$1" >> $TEMPLOGFILE
   MAILLOG="$MAILLOG
 
 $1"
@@ -69,7 +69,7 @@ run_project_script () {
   append_to_maillog "Output of project's $1 script:
 #######################################"
   echo ""
-  $REPODIR/$SCRIPTSDIR/$1 $MODE $REPODIR $CHECKOUTSOURCE > >(tee -a $WORKINGDIR/$HASH.script.$1.log) 2> >(tee -a $WORKINGDIR/$HASH.script.$1.log >&2) > >(tee -a $WORKINGDIR/templog.$HASH.txt) 2>(tee -a $WORKINGDIR/templog.$HASH.txt)
+  $REPODIR/$SCRIPTSDIR/$1 $MODE $REPODIR $CHECKOUTSOURCE > >(tee -a $WORKINGDIR/$HASH.script.$1.log) 2> >(tee -a $WORKINGDIR/$HASH.script.$1.log >&2) > >(tee -a $TEMPLOGFILE) 2>(tee -a $TEMPLOGFILE)
   STATUS=$?
   OUTPUT=`cat $WORKINGDIR/$HASH.script.$1.log`
   rm $WORKINGDIR/$HASH.script.$1.log
@@ -152,6 +152,7 @@ REPODIR=$PROJECTSDIR/$HASH
 CONTROLFILE=$WORKINGDIR/controlfile.$HASH
 LASTCOMMITIDFILE=$WORKINGDIR/last_commit_id.$HASH
 LASTTAGFILE=$WORKINGDIR/last_tag.$HASH
+TEMPLOGFILE=$WORKINGDIR/templog.$HASH.$(date +%Y-%m-%d_%H-%M)
 
 # Did the user provide the parameter "reset"? In this case
 # we remove everything we know about the given repo/branch combination
@@ -178,7 +179,6 @@ if [ -f $CONTROLFILE ]; then
   exit 1
 fi
 
-rm  $WORKINGDIR/templog.$HASH.txt
 # Prepare and check the environment
 
 mkdir -p $PROJECTSDIR
@@ -251,7 +251,7 @@ if [ "$MODE" = "tag" ]; then
 fi
 
 # Make log accessible via browser
-$SCRIPT_SRC_DIR/webmonitor.sh $WORKINGDIR/templog.$HASH.txt $3 &
+$SCRIPT_SRC_DIR/webmonitor.sh $TEMPLOGFILE $3 &
 
 # Checkout the source
 

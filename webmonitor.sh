@@ -111,3 +111,5 @@ done
 
 rm -f $LOGFILE
 
+rm -f $(echo $LOGFILE | cut -d "." -f1,2)*
+
