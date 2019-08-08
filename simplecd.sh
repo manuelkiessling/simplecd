@@ -34,7 +34,7 @@ $MAILLOG"
 }
 
 append_to_maillog () {
-  echo "$1\n" >> $WORKINGDIR/templog.$HASH.txt
+  echo "$1" >> $WORKINGDIR/templog.$HASH.txt
   MAILLOG="$MAILLOG
 
 $1"
@@ -69,7 +69,7 @@ run_project_script () {
   append_to_maillog "Output of project's $1 script:
 #######################################"
   echo ""
-  $REPODIR/$SCRIPTSDIR/$1 $MODE $REPODIR $CHECKOUTSOURCE > >(tee -a $WORKINGDIR/$HASH.script.$1.log) 2> >(tee -a $WORKINGDIR/$HASH.script.$1.log >&2)
+  $REPODIR/$SCRIPTSDIR/$1 $MODE $REPODIR $CHECKOUTSOURCE > >(tee -a $WORKINGDIR/$HASH.script.$1.log) 2> >(tee -a $WORKINGDIR/$HASH.script.$1.log >&2) > >(tee -a $WORKINGDIR/templog.$HASH.txt) 2>(tee -a $WORKINGDIR/templog.$HASH.txt)
   STATUS=$?
   OUTPUT=`cat $WORKINGDIR/$HASH.script.$1.log`
   rm $WORKINGDIR/$HASH.script.$1.log
