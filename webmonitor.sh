@@ -93,7 +93,7 @@ LASTLINE=null
 # abort after one minute if no one's writing anymore
 let i=0
 let t=0
-while [[ t -le 11 ]]; do
+while [[ t -lt 60 ]]; do
     let i=$i+1
     CURRENTLINE=$(head -n $i $LOGFILE | tail -n 1)
 
