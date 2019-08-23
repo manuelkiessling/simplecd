@@ -47,7 +47,9 @@ These files must be placed in a subfolder of your project's repository named
 
 SimpleCD will try to execute each step by executing these scripts in the order
 shown above. If executing a script results in a status code > 0, then the
-delivery is aborted.
+delivery is aborted. If this is the case, and a special script
+`on-project-script-error` exists in the `_simplecd_` folder, then this script
+is executed before SimpleCD aborts delivery for good.
 
 Additionally, you can add a file `_simplecd/logreceivers.txt` with one mail
 address per line. If the file is present, a report of the run will be sent to

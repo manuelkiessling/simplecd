@@ -77,6 +77,16 @@ run_project_script () {
   echo "Finished executing project's $1 script."
 
   if [ ! $STATUS -eq 0 ]; then
+    if [ -x "$REPODIR/$SCRIPTSDIR/on-project-script-error" ]; then
+      echo "Error while executing project's $1 script. Executing on-project-script-error script..."
+      append_to_maillog "Error while executing project's $1 script. Executing on-project-script-error script..."
+      $REPODIR/$SCRIPTSDIR/on-project-script-error > >(tee -a $WORKINGDIR/$HASH.script.on-project-script-error.log) 2> >(tee -a $WORKINGDIR/$HASH.script.on-project-script-error.log >&2)
+      OUTPUT=`cat $WORKINGDIR/$HASH.script.on-project-script-error.log`
+      rm $WORKINGDIR/$HASH.script.on-project-script-error.log
+      append_to_maillog "$OUTPUT"
+      echo ""
+      echo "Finished executing project's on-project-script-error script."
+    fi
     abort "Error while executing project's $1 script. Aborting..."
   fi
 
