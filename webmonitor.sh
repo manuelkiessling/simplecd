@@ -4,6 +4,8 @@
 # 2. converts logfile to html (just puts <br /> after every line; will be extended soon)
 # 3. uses ajax via javascript to get the converted html-logfile
 
+[[ -w /var/www ]] || echo "Directory /var/www does not exist, aborting." && exit 1
+
 NOW=$(date '+%d.%m.%Y_%H:%M:%S')
 
 #Input variables
@@ -41,7 +43,7 @@ then
 fi
 
 # create subdirectory
-[[ -d  $OUTPUT_DIRECTORY_PATH ]] || mkdir $OUTPUT_DIRECTORY_PATH
+[[ -d $OUTPUT_DIRECTORY_PATH ]] || mkdir -p $OUTPUT_DIRECTORY_PATH
 
 
 
