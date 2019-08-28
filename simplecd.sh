@@ -34,6 +34,7 @@ $MAILLOG"
 }
 
 append_to_maillog () {
+  echo "$1" >> $LOGFILEFORWEBMONITOR
   MAILLOG="$MAILLOG
 
 $1"
@@ -68,7 +69,7 @@ run_project_script () {
   append_to_maillog "Output of project's $1 script:
 #######################################"
   echo ""
-  $REPODIR/$SCRIPTSDIR/$1 $MODE $REPODIR $CHECKOUTSOURCE > >(tee -a $WORKINGDIR/$HASH.script.$1.log) 2> >(tee -a $WORKINGDIR/$HASH.script.$1.log >&2)
+  $REPODIR/$SCRIPTSDIR/$1 $MODE $REPODIR $CHECKOUTSOURCE > >(tee -a $WORKINGDIR/$HASH.script.$1.log) 2> >(tee -a $WORKINGDIR/$HASH.script.$1.log >&2) > >(tee -a $LOGFILEFORWEBMONITOR) 2>(tee -a $LOGFILEFORWEBMONITOR)
   STATUS=$?
   OUTPUT=`cat $WORKINGDIR/$HASH.script.$1.log`
   rm $WORKINGDIR/$HASH.script.$1.log
@@ -93,7 +94,6 @@ run_project_script () {
   echo ""
 }
 
-
 # Sanity checks #############################################################
 
 # Verify that we have git
@@ -116,6 +116,9 @@ fi
 MODE=$1 # "branch" or "tag"
 SOURCE=$2
 REPO=$3
+
+
+
 
 if [ "$4" = "reset" ]; then
     DORESET="yes"
@@ -151,13 +154,15 @@ else
   MD5BIN=/usr/bin/md5sum
 fi
 
-HASH=`echo "$0 $MODE $REPO $SOURCE" | $MD5BIN | cut -d" " -f1`
 WORKINGDIR=/var/tmp/simplecd
+SCRIPT_SRC_DIR=$(dirname "$0")
+HASH=`echo "$0 $MODE $REPO $SOURCE" | $MD5BIN | cut -d" " -f1`
 PROJECTSDIR=$WORKINGDIR/projects
 REPODIR=$PROJECTSDIR/$HASH
 CONTROLFILE=$WORKINGDIR/controlfile.$HASH
 LASTCOMMITIDFILE=$WORKINGDIR/last_commit_id.$HASH
 LASTTAGFILE=$WORKINGDIR/last_tag.$HASH
+LOGFILEFORWEBMONITOR=$WORKINGDIR/logforwebmonitor.$HASH.$(date +%Y-%m-%d_%H-%M)
 
 # Did the user provide the parameter "reset"? In this case
 # we remove everything we know about the given repo/branch combination
@@ -196,9 +201,7 @@ fi
 
 touch $CONTROLFILE
 
-
 # Let's go
-
 echo ""
 echo "Starting delivery of source $SOURCE from repo $REPO in mode $MODE, hash of this run is $HASH"
 echo ""
@@ -239,11 +242,13 @@ if [ "$MODE" = "tag" ]; then
   if [ "$LASTTAG" = "$LASTEXISTINGTAG" ]; then
     echo "No tag newer than '$LASTTAG' found, won't deliver. Aborting..."
     rm -f $CONTROLFILE
+    rm -f $LOGFILEFORWEBMONITOR
     exit 0
   fi
   if [ "" = "$LASTEXISTINGTAG" ]; then
     echo "Couldn't retrieve remote tag, won't deliver. Aborting..."
     rm -f $CONTROLFILE
+    rm -f $LOGFILEFORWEBMONITOR
     exit 0
   fi
   append_to_maillog "Local known last tag was $LASTTAG, found $LASTEXISTINGTAG remotely."
@@ -257,6 +262,8 @@ if [ "$MODE" = "tag" ]; then
   CHECKOUTSOURCE=$LASTEXISTINGTAG
 fi
 
+# Make log accessible via browser
+$SCRIPT_SRC_DIR/webmonitor.sh $LOGFILEFORWEBMONITOR $3 &
 
 # Checkout the source
 
