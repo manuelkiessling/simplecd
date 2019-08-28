@@ -34,7 +34,7 @@ $MAILLOG"
 }
 
 append_to_maillog () {
-  echo "$1" >> $TEMPLOGFILE
+  echo "$1" >> $LOGFILEFORWEBMONITOR
   MAILLOG="$MAILLOG
 
 $1"
@@ -69,7 +69,7 @@ run_project_script () {
   append_to_maillog "Output of project's $1 script:
 #######################################"
   echo ""
-  $REPODIR/$SCRIPTSDIR/$1 $MODE $REPODIR $CHECKOUTSOURCE > >(tee -a $WORKINGDIR/$HASH.script.$1.log) 2> >(tee -a $WORKINGDIR/$HASH.script.$1.log >&2) > >(tee -a $TEMPLOGFILE) 2>(tee -a $TEMPLOGFILE)
+  $REPODIR/$SCRIPTSDIR/$1 $MODE $REPODIR $CHECKOUTSOURCE > >(tee -a $WORKINGDIR/$HASH.script.$1.log) 2> >(tee -a $WORKINGDIR/$HASH.script.$1.log >&2) > >(tee -a $LOGFILEFORWEBMONITOR) 2>(tee -a $LOGFILEFORWEBMONITOR)
   STATUS=$?
   OUTPUT=`cat $WORKINGDIR/$HASH.script.$1.log`
   rm $WORKINGDIR/$HASH.script.$1.log
@@ -152,7 +152,7 @@ REPODIR=$PROJECTSDIR/$HASH
 CONTROLFILE=$WORKINGDIR/controlfile.$HASH
 LASTCOMMITIDFILE=$WORKINGDIR/last_commit_id.$HASH
 LASTTAGFILE=$WORKINGDIR/last_tag.$HASH
-TEMPLOGFILE=$WORKINGDIR/templog.$HASH.$(date +%Y-%m-%d_%H-%M)
+LOGFILEFORWEBMONITOR=$WORKINGDIR/logforwebmonitor.$HASH.$(date +%Y-%m-%d_%H-%M)
 
 # Did the user provide the parameter "reset"? In this case
 # we remove everything we know about the given repo/branch combination
@@ -232,11 +232,13 @@ if [ "$MODE" = "tag" ]; then
   if [ "$LASTTAG" = "$LASTEXISTINGTAG" ]; then
     echo "No tag newer than '$LASTTAG' found, won't deliver. Aborting..."
     rm -f $CONTROLFILE
+    rm -f $LOGFILEFORWEBMONITOR
     exit 0
   fi
   if [ "" = "$LASTEXISTINGTAG" ]; then
     echo "Couldn't retrieve remote tag, won't deliver. Aborting..."
     rm -f $CONTROLFILE
+    rm -f $LOGFILEFORWEBMONITOR
     exit 0
   fi
   append_to_maillog "Local known last tag was $LASTTAG, found $LASTEXISTINGTAG remotely."
@@ -251,7 +253,7 @@ if [ "$MODE" = "tag" ]; then
 fi
 
 # Make log accessible via browser
-$SCRIPT_SRC_DIR/webmonitor.sh $TEMPLOGFILE $3 &
+$SCRIPT_SRC_DIR/webmonitor.sh $LOGFILEFORWEBMONITOR $3 &
 
 # Checkout the source
 

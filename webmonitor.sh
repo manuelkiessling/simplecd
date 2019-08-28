@@ -4,9 +4,11 @@
 # 2. converts logfile to html (just puts <br /> after every line; will be extended soon)
 # 3. uses ajax via javascript to get the converted html-logfile
 
+NOW=$(date '+%d.%m.%Y_%H:%M:%S')
+
 #Input variables
 LOGFILE=$1
-export REPO=$(echo $2 | cut -d '/' -f 2 | cut -d '.' -f 1)
+REPO=$(echo $2 | cut -d '/' -f 2 | cut -d '.' -f 1)
 
 # check if input variables are not null
 if [[ $LOGFILE == "" ]]
@@ -15,8 +17,8 @@ then
     exit 1
 fi
 
-export UNIQUEDIR=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 7 | head -n 1)
-SUB_DIRECTORY=/var/www/simplecd/$UNIQUEDIR
+OUTPUT_DIRECTORY_NAME="${REPO}_${NOW}"
+OUTPUT_DIRECTORY_PATH=/var/www/simplecd/"${OUTPUT_DIRECTORY_NAME}"
 LOG_EXISTS=false
 PAGE_TITLE="Build $REPO on $(date '+%d.%m.%Y %H:%M:%S')"
 CURDIR=$(dirname "$0")
@@ -39,18 +41,23 @@ then
 fi
 
 # create subdirectory
-[[ -d  $SUB_DIRECTORY ]] || mkdir $SUB_DIRECTORY
+[[ -d  $OUTPUT_DIRECTORY_PATH ]] || mkdir $OUTPUT_DIRECTORY_PATH
 
 
 
 # create html-file
-cat > $SUB_DIRECTORY/index.html \
+cat > $OUTPUT_DIRECTORY_PATH/index.html \
 <<- _EOF_
     <html>
     <head>
         <title>
           SimpleCD Monitor
          </title>
+         <style>
+             body {
+                 font-family: monospace;
+             }
+         </style>
      </head>
      <body>
      <script>
@@ -77,15 +84,15 @@ cat > $SUB_DIRECTORY/index.html \
      <div style="position:fixed; top:0; height: 50px;background-color:white;width:98%;padding-bottom:20px;">
         <h1>$PAGE_TITLE</h1>
      </div>
-     <div id="text" style="z-index:-100;margin-top:50px;width:99%"></div>
+     <div id="text" style="z-index:-100;margin-top:100px;width:99%"></div>
      <div id="bottom"></div>
      </body>
      </html>
 _EOF_
 
-# use additional script for notifications e.g. Slack Webhooks
+# If there is a script for notifying about the new rollout and its web output, trigger it.
 
-[[ -f $CURDIR/notification.sh ]] && $CURDIR/notification.sh
+[[ -e $CURDIR/notification.sh ]] && $CURDIR/notification.sh $REPO $OUTPUT_DIRECTORY_NAME
 
 LASTLINE=null
 
@@ -100,7 +107,7 @@ while [[ t -lt 60 ]]; do
         if [[ "$LASTLINE" != $CURRENTLINE ]]
         then
             let t=0
-            echo $CURRENTLINE "<br />" >> $SUB_DIRECTORY/htmllog.log
+            echo $CURRENTLINE "<br />" >> $OUTPUT_DIRECTORY_PATH/htmllog.log
             LASTLINE=$CURRENTLINE
             sleep 0.5
         else
@@ -110,6 +117,3 @@ while [[ t -lt 60 ]]; do
 done
 
 rm -f $LOGFILE
-
-rm -f $(echo $LOGFILE | cut -d "." -f1,2)*
-
