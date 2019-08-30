@@ -4,7 +4,7 @@
 # 2. converts logfile to html (just puts <br /> after every line; will be extended soon)
 # 3. uses ajax via javascript to get the converted html-logfile
 
-[[ -w /var/www ]] || echo "Directory /var/www does not exist, aborting." && exit 1
+if [[ ! -w /var/www/simplecd ]] ; then echo "Directory /var/www/simplecd does not exist, aborting." && exit 1; fi
 
 NOW=$(date '+%d.%m.%Y_%H:%M:%S')
 
@@ -24,6 +24,7 @@ OUTPUT_DIRECTORY_PATH=/var/www/simplecd/"${OUTPUT_DIRECTORY_NAME}"
 LOG_EXISTS=false
 PAGE_TITLE="Build $REPO on $(date '+%d.%m.%Y %H:%M:%S')"
 CURDIR=$(dirname "$0")
+KNOWN_ANSI_CODES=("[31m" "[32m" ";32m" "[0m" ";31m" "[1m" "[0m") # for better text readibility - extendable
 
 echo $PAGE_TITLE
 
@@ -104,18 +105,39 @@ let i=0
 let t=0
 while [[ t -lt 60 ]]; do
     let i=$i+1
+    FONTCOLOR=black
     CURRENTLINE=$(head -n $i $LOGFILE | tail -n 1)
 
-        if [[ "$LASTLINE" != $CURRENTLINE ]]
-        then
-            let t=0
-            echo $CURRENTLINE "<br />" >> $OUTPUT_DIRECTORY_PATH/htmllog.log
-            LASTLINE=$CURRENTLINE
-            sleep 0.5
-        else
-            sleep 5
-            let t=$t+1
-        fi
+      if [[ $LASTLINE != $CURRENTLINE ]]
+      then
+        LASTLINE=$CURRENTLINE
+        let t=0
+        for color in ${KNOWN_ANSI_CODES[*]}
+        do
+            if [[ $CURRENTLINE == *$color* ]]
+            then
+              # ansi code handling
+              case $color in
+                  \[31m)  FONTCOLOR=red
+                          CURRENTLINE=$(echo $CURRENTLINE | sed -r 's/\[31m//g' );;
+                  \[32m)  FONTCOLOR=green
+                          CURRENTLINE=$(echo $CURRENTLINE | sed -r 's/\[32m//g' );;
+                  \;32m)  FONTCOLOR=green
+                          CURRENTLINE=$(echo $CURRENTLINE | sed -r 's/\;32m//g' );;
+                  \;31m)  FONTCOLOR=red
+                          CURRENTLINE=$(echo $CURRENTLINE | sed -r 's/\;31m//g' );;
+                  \[1m)   CURRENTLINE=$(echo '<b>'$CURRENTLINE'</b>' | sed -r 's/\[1m//g' ) ;;
+                  \[0m)   CURRENTLINE=$(echo $CURRENTLINE | sed -r 's/\[0m//g') ;;
+                  default) FONTCOLOR=black
+              esac
+            fi
+        done
+        echo '<span style="color:'$FONTCOLOR'">'$CURRENTLINE'</span><br>' >> $OUTPUT_DIRECTORY_PATH/htmllog.log
+        sleep 0.2
+      else
+        sleep 5
+        let t=$t+1
+      fi
 done
 
 rm -f $LOGFILE
